@@ -22,7 +22,6 @@ export ANDROID_SDK_ROOT := WORLD_PWD + "/android_sdk"
 export JAVA_HOME := WORLD_PWD + "/jdk"
 export VULKAN_SDK_ROOT := WORLD_PWD + "/vulkan_sdk/"
 export EMSDK_ROOT := WORLD_PWD + "/emsdk"
-export OSXCROSS_ROOT := WORLD_PWD + "/osxcross"
 export MINGW_ROOT := WORLD_PWD + "/mingw"
 
 print-binary-folder: run-all
@@ -33,8 +32,6 @@ run-all:
     just setup-android-sdk
     just setup-emscripten
     just fetch-llvm-mingw
-    just build-osxcross
-    just fetch-vulkan-sdk
     just all-build-platform-target
     echo "run-all: Success!"
 
@@ -55,15 +52,6 @@ fetch-openjdk:
         mkdir -p {{JAVA_HOME}}
         tar -xf jdk.tar.gz -C {{JAVA_HOME}} --strip 1
         rm -rf jdk.tar.gz
-    fi
-
-fetch-vulkan-sdk:
-    #!/usr/bin/env bash
-    if [ ! -d "${VULKAN_SDK_ROOT}" ]; then
-        curl -L "https://github.com/godotengine/moltenvk-osxcross/releases/download/vulkan-sdk-1.3.283.0-2/MoltenVK-all.tar" -o vulkan-sdk.zip
-        mkdir -p ${VULKAN_SDK_ROOT}
-        tar -xf vulkan-sdk.zip -C {{VULKAN_SDK_ROOT}}
-        rm vulkan-sdk.zip
     fi
 
 setup-android-sdk:
@@ -98,21 +86,6 @@ setup-emscripten:
         ./emsdk activate 3.1.67
     fi
 
-deploy_osxcross:
-    #!/usr/bin/env bash
-    git clone https://github.com/tpoechtrager/osxcross.git || true
-    cd osxcross
-    ./tools/gen_sdk_package.sh 
-
-build-osxcross:
-    #!/usr/bin/env bash
-    if [ ! -d "${OSXCROSS_ROOT}" ]; then
-        git clone https://github.com/tpoechtrager/osxcross.git 
-        curl -o $OSXCROSS_ROOT/tarballs/MacOSX15.0.sdk.tar.xz -L https://github.com/V-Sekai/world/releases/download/v0.0.1/MacOSX15.0.sdk.tar.xz
-        ls -l $OSXCROSS_ROOT/tarballs/
-        cd $OSXCROSS_ROOT && UNATTENDED=1 ./build.sh && ./build_compiler_rt.sh
-    fi
-
 nil:
     echo "nil: Suceeded."
 
@@ -139,14 +112,10 @@ build-platform-target platform target:
     #!/usr/bin/env bash
     cd $WORLD_PWD
     export PATH=$MINGW_ROOT/bin:$PATH
-    export PATH=$OSXCROSS_ROOT/target/bin/:$PATH
     source "$EMSDK_ROOT/emsdk_env.sh"
     cd godot
     export EXTRA_FLAGS=""
     case "{{platform}}" in \
-        macos)
-            EXTRA_FLAGS="vulkan_sdk_path=$VULKAN_SDK_ROOT/MoltenVK/MoltenVK/static/MoltenVK.xcframework osxcross_sdk=darwin24 vulkan=yes arch=arm64" \
-            ;; \
         *) \
             EXTRA_FLAGS="use_llvm=yes use_mingw=yes" \
             ;; \
@@ -171,7 +140,7 @@ build-platform-target platform target:
 all-build-platform-target:
     #!/usr/bin/env bash
     parallel --ungroup --jobs 1 'just build-platform-target {1} {2}' \
-    ::: windows linux macos android web \
+    ::: windows linux android web \
     ::: editor template_debug template_release
 
 handle-special-cases platform target:
