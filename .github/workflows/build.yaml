@@ -24,8 +24,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [linux, windows, android, web]
-        target: [editor, template_release, template_debug]
+        platform: [macos]
+        target: [template_debug]
 
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.platform }}-${{ matrix.target }}
