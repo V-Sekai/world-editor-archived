@@ -131,7 +131,9 @@ jobs:
     needs: merge
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
+      
       - name: Create Release
+        id: create_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -145,7 +147,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: v-sekai-world
-            
+
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
         env:
