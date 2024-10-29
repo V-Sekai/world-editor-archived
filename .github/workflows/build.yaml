@@ -24,7 +24,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [macos, linux, windows, android, web]
+        platform: [linux, windows, android, web]
         target: [editor, template_release, template_debug]
 
     concurrency:
@@ -136,7 +136,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: latest.v-sekai-editor
+          tag_name: latest.v-sekai-editor-${{ github.run_number }}
           release_name: Latest Release of V-Sekai World Editor
           draft: false
           prerelease: true
