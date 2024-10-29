@@ -47,8 +47,7 @@ void PostImportPluginSkeletonRestFixer::get_internal_import_options(InternalImpo
 		r_options->push_back(ResourceImporter::ImportOption(PropertyInfo(Variant::INT, "retarget/rest_fixer/retarget_method", PROPERTY_HINT_ENUM, "None,Overwrite Axis,Use Retarget Modifier", PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_UPDATE_ALL_IF_MODIFIED), 1));
 		r_options->push_back(ResourceImporter::ImportOption(PropertyInfo(Variant::BOOL, "retarget/rest_fixer/keep_global_rest_on_leftovers"), true));
 		String skeleton_bones_must_be_renamed_warning = String(
-				"The skeleton modifier option uses SkeletonProfile as a list of bone names and retargets by name matching."
-				"Without renaming, retargeting by modifier will not work and the track path of the animation will be broken and it will be not playbacked correctly."); // TODO: translate.
+				"The skeleton modifier option uses SkeletonProfile as a list of bone names and retargets by name matching. Without renaming, retargeting by modifier will not work and the track path of the animation will be broken and it will be not playbacked correctly."); // TODO: translate.
 		r_options->push_back(ResourceImporter::ImportOption(
 				PropertyInfo(
 						Variant::STRING, U"retarget/rest_fixer/\u26A0_validation_warning/skeleton_bones_must_be_renamed",
