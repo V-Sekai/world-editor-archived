@@ -148,6 +148,9 @@ jobs:
         with:
           name: v-sekai-world
 
+      - name: Zip Artifacts
+        run: zip -r v-sekai-world.zip v-sekai-world
+
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
         env:
