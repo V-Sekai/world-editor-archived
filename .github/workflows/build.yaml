@@ -24,7 +24,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [linux, windows, android, web]
+        platform: [macos, linux, windows, android, web]
         target: [editor, template_release, template_debug]
 
     concurrency:
