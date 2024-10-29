@@ -144,8 +144,12 @@ build-platform-target platform target:
     cd godot
     export EXTRA_FLAGS=""
     case "{{platform}}" in \
+        macos-native)
+            EXTRA_FLAGS="vulkan_sdk_path=$VULKAN_SDK_ROOT/MoltenVK/MoltenVK/static/MoltenVK.xcframework vulkan=yes arch=arm64 osxcross_sdk=darwin24" \
+            ;; \
         macos)
-            EXTRA_FLAGS="vulkan_sdk_path=$VULKAN_SDK_ROOT/MoltenVK/MoltenVK/static/MoltenVK.xcframework osxcross_sdk=darwin24 vulkan=yes arch=arm64" \
+            export OSXCROSS_ROOT=""
+            EXTRA_FLAGS="vulkan_sdk_path=$VULKAN_SDK_ROOT/MoltenVK/MoltenVK/static/MoltenVK.xcframework vulkan=yes arch=arm64" \
             ;; \
         *) \
             EXTRA_FLAGS="use_llvm=yes use_mingw=yes" \
