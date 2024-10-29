@@ -35,7 +35,7 @@ run-all:
     just fetch-llvm-mingw
     just build-osxcross
     just fetch-vulkan-sdk
-    just all-build-platform-target
+    just build-platform-target macos template_release
     echo "run-all: Success!"
 
 fetch-llvm-mingw:
@@ -144,12 +144,15 @@ build-platform-target platform target:
     cd godot
     export EXTRA_FLAGS=""
     case "{{platform}}" in \
-        macos)
-            EXTRA_FLAGS="vulkan_sdk_path=$VULKAN_SDK_ROOT/MoltenVK/MoltenVK/static/MoltenVK.xcframework osxcross_sdk=darwin24 vulkan=yes arch=arm64" \
-            ;; \
-        *) \
-            EXTRA_FLAGS="use_llvm=yes use_mingw=yes" \
-            ;; \
+        macos) \
+            EXTRA_FLAGS="vulkan=yes arch=arm64 werror=no vulkan_sdk_path=$VULKAN_SDK_ROOT/MoltenVK/MoltenVK/static/MoltenVK.xcframework osxcross_sdk=darwin24"
+            if [ "$(uname)" = "Darwin" ]; then
+                unset OSXCROSS_ROOT
+            fi
+            ;;
+        *)
+            EXTRA_FLAGS="use_llvm=yes use_mingw=yes"
+            ;;
     esac
     scons platform={{platform}} \
           werror=no \
