@@ -150,6 +150,9 @@ build-platform-target platform target precision="double":
                 unset OSXCROSS_ROOT
             fi
             ;;
+        web)
+            EXTRA_FLAGS="dlink_enabled=yes"
+            ;;
         *)
             EXTRA_FLAGS="use_llvm=yes use_mingw=yes"
             ;;
