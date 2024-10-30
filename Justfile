@@ -145,7 +145,7 @@ build-platform-target platform target:
     export EXTRA_FLAGS=""
     case "{{platform}}" in \
         macos) \
-            EXTRA_FLAGS="vulkan=yes arch=arm64 werror=no vulkan_sdk_path=$VULKAN_SDK_ROOT/MoltenVK/MoltenVK/static/MoltenVK.xcframework osxcross_sdk=darwin24"
+            EXTRA_FLAGS="vulkan=yes arch=arm64 werror=no vulkan_sdk_path=$VULKAN_SDK_ROOT/MoltenVK/MoltenVK/static/MoltenVK.xcframework osxcross_sdk=darwin24 generate_bundle=yes"
             if [ "$(uname)" = "Darwin" ]; then
                 unset OSXCROSS_ROOT
             fi
