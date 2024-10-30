@@ -6,8 +6,6 @@
 
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
-The V-Sekai World project aims to create a virtual world using the Godot Engine client and server.
-
 ## Contributors ✨
 
 Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
