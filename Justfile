@@ -135,7 +135,7 @@ generate_build_constants:
     echo "const BUILD_UNIX_TIME = $(shell date +%s)" >> v/addons/vsk_version/build_constants.gd
 
 
-build-platform-target platform target:
+build-platform-target platform target precision="double":
     #!/usr/bin/env bash
     cd $WORLD_PWD
     export PATH=$MINGW_ROOT/bin:$PATH
@@ -157,7 +157,7 @@ build-platform-target platform target:
     scons platform={{platform}} \
           werror=no \
           compiledb=yes \
-          precision=double \
+          precision={{precision}} \
           target={{target}} \
           test=yes \
           debug_symbol=yes \
