@@ -243,7 +243,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: latest.v-sekai-editor-${{ github.run_number }}
-          release_name: Latest Release of V-Sekai World Editor
+          release_name: Latest Release of V-Sekai Godot Engine Editor
           draft: false
           prerelease: true
 
