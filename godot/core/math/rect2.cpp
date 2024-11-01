@@ -283,7 +283,7 @@ next4:
 }
 
 Rect2::operator String() const {
-	return "[P: " + position.operator String() + ", S: " + size.operator String() + "]";
+	return "[P: " + position.operator String() + ", S: " + size + "]";
 }
 
 Rect2::operator Rect2i() const {
