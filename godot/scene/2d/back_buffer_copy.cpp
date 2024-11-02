@@ -53,7 +53,7 @@ Rect2 BackBufferCopy::_edit_get_rect() const {
 bool BackBufferCopy::_edit_use_rect() const {
 	return true;
 }
-#endif
+#endif // DEBUG_ENABLED
 
 Rect2 BackBufferCopy::get_anchorable_rect() const {
 	return rect;

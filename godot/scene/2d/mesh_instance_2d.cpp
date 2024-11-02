@@ -101,7 +101,7 @@ Rect2 MeshInstance2D::_edit_get_rect() const {
 bool MeshInstance2D::_edit_use_rect() const {
 	return mesh.is_valid();
 }
-#endif
+#endif // DEBUG_ENABLED
 
 MeshInstance2D::MeshInstance2D() {
 }

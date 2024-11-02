@@ -150,7 +150,7 @@ Rect2 NavigationRegion2D::_edit_get_rect() const {
 bool NavigationRegion2D::_edit_is_selected_on_click(const Point2 &p_point, double p_tolerance) const {
 	return navigation_polygon.is_valid() ? navigation_polygon->_edit_is_selected_on_click(p_point, p_tolerance) : false;
 }
-#endif
+#endif // DEBUG_ENABLED
 
 void NavigationRegion2D::_notification(int p_what) {
 	switch (p_what) {

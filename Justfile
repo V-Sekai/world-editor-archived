@@ -25,8 +25,8 @@ export EMSDK_ROOT := WORLD_PWD + "/emsdk"
 export OSXCROSS_ROOT := WORLD_PWD + "/osxcross"
 export MINGW_ROOT := WORLD_PWD + "/mingw"
 
-print-binary-folder: run-all
-    ls -al godot/bin
+build-target-macos-editor-single:
+    @just build-platform-target macos editor single
 
 run-all:
     just fetch-openjdk

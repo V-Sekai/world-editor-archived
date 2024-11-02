@@ -93,7 +93,7 @@ Rect2 MultiMeshInstance2D::_edit_get_rect() const {
 
 	return Node2D::_edit_get_rect();
 }
-#endif
+#endif // DEBUG_ENABLED
 
 MultiMeshInstance2D::MultiMeshInstance2D() {
 }
