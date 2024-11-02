@@ -35,7 +35,7 @@
 
 #define LINE_GRAB_WIDTH 8
 
-#ifdef TOOLS_ENABLED
+#ifdef DEBUG_ENABLED
 Rect2 OccluderPolygon2D::_edit_get_rect() const {
 	if (rect_cache_dirty) {
 		if (closed) {
@@ -90,6 +90,7 @@ void OccluderPolygon2D::set_polygon(const Vector<Vector2> &p_polygon) {
 	rect_cache_dirty = true;
 	RS::get_singleton()->canvas_occluder_polygon_set_shape(occ_polygon, p_polygon, closed);
 	emit_changed();
+	update_configuration_warning();
 }
 
 Vector<Vector2> OccluderPolygon2D::get_polygon() const {
@@ -217,7 +218,7 @@ void LightOccluder2D::_notification(int p_what) {
 	}
 }
 
-#ifdef TOOLS_ENABLED
+#ifdef DEBUG_ENABLED
 Rect2 LightOccluder2D::_edit_get_rect() const {
 	return occluder_polygon.is_valid() ? occluder_polygon->_edit_get_rect() : Rect2();
 }
