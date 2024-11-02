@@ -70,7 +70,7 @@ Rect2 Marker2D::_edit_get_rect() const {
 bool Marker2D::_edit_use_rect() const {
 	return false;
 }
-#endif
+#endif // DEBUG_ENABLED
 
 void Marker2D::_notification(int p_what) {
 	switch (p_what) {

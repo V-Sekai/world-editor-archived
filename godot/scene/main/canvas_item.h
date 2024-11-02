@@ -174,7 +174,7 @@ protected:
 	void _draw_multiline_bind_compat_84523(const Vector<Point2> &p_points, const Color &p_color, real_t p_width);
 	void _draw_multiline_colors_bind_compat_84523(const Vector<Point2> &p_points, const Vector<Color> &p_colors, real_t p_width);
 	static void _bind_compatibility_methods();
-#endif
+#endif // DISABLE_DEPRECATED
 
 	void _validate_property(PropertyInfo &p_property) const;
 
@@ -223,7 +223,7 @@ public:
 	virtual Point2 _edit_get_pivot() const { return Point2(); }
 
 	virtual Transform2D _edit_get_transform() const;
-#endif
+#endif // TOOLS_ENABLED
 
 #ifdef DEBUG_ENABLED
 	// Those need to be available in debug runtime, to allow for node selection.
@@ -234,7 +234,7 @@ public:
 	// Used to resize/move the node.
 	virtual bool _edit_use_rect() const { return false; } // Maybe replace with _edit_get_editmode().
 	virtual Rect2 _edit_get_rect() const { return Rect2(0, 0, 0, 0); }
-#endif
+#endif // DEBUG_ENABLED
 
 	void update_draw_order();
 

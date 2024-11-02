@@ -342,7 +342,7 @@ Rect2 TouchScreenButton::_edit_get_rect() const {
 bool TouchScreenButton::_edit_use_rect() const {
 	return !texture_normal.is_null();
 }
-#endif
+#endif // DEBUG_ENABLED
 
 Rect2 TouchScreenButton::get_anchorable_rect() const {
 	if (texture_normal.is_null()) {

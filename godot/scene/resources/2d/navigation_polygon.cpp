@@ -79,7 +79,7 @@ bool NavigationPolygon::_edit_is_selected_on_click(const Point2 &p_point, double
 	}
 	return false;
 }
-#endif
+#endif // DEBUG_ENABLED
 
 void NavigationPolygon::set_vertices(const Vector<Vector2> &p_vertices) {
 	RWLockWrite write_lock(rwlock);
