@@ -22,21 +22,11 @@ export ANDROID_SDK_ROOT := WORLD_PWD + "/android_sdk"
 export JAVA_HOME := WORLD_PWD + "/jdk"
 export VULKAN_SDK_ROOT := WORLD_PWD + "/vulkan_sdk/"
 export EMSDK_ROOT := WORLD_PWD + "/emsdk"
-export OSXCROSS_ROOT := WORLD_PWD + "/osxcross"
 export MINGW_ROOT := WORLD_PWD + "/mingw"
+export OSXCROSS_ROOT := WORLD_PWD + "/osxcross"
 
-build-target-macos-editor-single:
+build-target-macos-editor-single: 
     @just build-platform-target macos editor single
-
-run-all:
-    just fetch-openjdk
-    just setup-android-sdk
-    just setup-emscripten
-    just fetch-llvm-mingw
-    just build-osxcross
-    just fetch-vulkan-sdk
-    just build-platform-target macos template_release
-    echo "run-all: Success!"
 
 fetch-llvm-mingw:
     #!/usr/bin/env bash
@@ -106,18 +96,23 @@ deploy_osxcross:
 
 build-osxcross:
     #!/usr/bin/env bash
-    if [ ! -d "${OSXCROSS_ROOT}" ]; then
-        git clone https://github.com/tpoechtrager/osxcross.git 
+    if [ ! -d "$OSXCROSS_ROOT" ]; then
+        # Clone the osxcross repository
+        git clone https://github.com/tpoechtrager/osxcross.git $OSXCROSS_ROOT
+        # Download MacOSX15.0.sdk.tar.xz
         curl -o $OSXCROSS_ROOT/tarballs/MacOSX15.0.sdk.tar.xz -L https://github.com/V-Sekai/world/releases/download/v0.0.1/MacOSX15.0.sdk.tar.xz
+        # List contents of tarballs directory to verify download
         ls -l $OSXCROSS_ROOT/tarballs/
-        cd $OSXCROSS_ROOT && UNATTENDED=1 ./build.sh && ./build_compiler_rt.sh
+        cd $OSXCROSS_ROOT
+        UNATTENDED=1 ./build.sh && ./build_compiler_rt.sh
+    else
+        echo "osxcross already exists, skipping build."
     fi
-
 nil:
     echo "nil: Suceeded."
 
 install_packages:
-    dnf install -y hyperfine vulkan xz gcc gcc-c++ zlib-devel libmpc-devel mpfr-devel gmp-devel clang just parallel scons mold pkgconfig libX11-devel libXcursor-devel libXrandr-devel libXinerama-devel libXi-devel wayland-devel mesa-libGL-devel mesa-libGLU-devel alsa-lib-devel pulseaudio-libs-devel libudev-devel libstdc++-static libatomic-static cmake ccache patch libxml2-devel openssl openssl-devel git unzip
+    dnf install -y golang hyperfine vulkan xz gcc gcc-c++ zlib-devel libmpc-devel mpfr-devel gmp-devel clang just parallel scons mold pkgconfig libX11-devel libXcursor-devel libXrandr-devel libXinerama-devel libXi-devel wayland-devel mesa-libGL-devel mesa-libGLU-devel alsa-lib-devel pulseaudio-libs-devel libudev-devel libstdc++-static libatomic-static cmake ccache patch libxml2-devel openssl openssl-devel git unzip
 
 copy_binaries:
     cp templates/windows_release_x86_64.exe export_windows/v_sekai_windows.exe
@@ -134,18 +129,35 @@ generate_build_constants:
     echo "const BUILD_DATE_STR = \"$(shell date --utc --iso=seconds)\"" >> v/addons/vsk_version/build_constants.gd
     echo "const BUILD_UNIX_TIME = $(shell date +%s)" >> v/addons/vsk_version/build_constants.gd
 
-
 build-platform-target platform target precision="double":
     #!/usr/bin/env bash
     cd $WORLD_PWD
-    export PATH=$MINGW_ROOT/bin:$PATH
-    export PATH=$OSXCROSS_ROOT/target/bin/:$PATH
-    source "$EMSDK_ROOT/emsdk_env.sh"
-    cd godot
     export EXTRA_FLAGS=""
-    case "{{platform}}" in \
-        macos) \
-            EXTRA_FLAGS="vulkan=yes arch=arm64 werror=no vulkan_sdk_path=$VULKAN_SDK_ROOT/MoltenVK/MoltenVK/static/MoltenVK.xcframework osxcross_sdk=darwin24 generate_bundle=yes"
+    case "{{platform}}" in 
+        windows)
+            @just fetch-llvm-mingw
+            export PATH=$MINGW_ROOT/bin:$PATH
+            EXTRA_FLAGS="use_llvm=yes use_mingw=yes"
+            ;;
+        web)
+            @just setup-emscripten
+            source "$EMSDK_ROOT/emsdk_env.sh"
+            ;;
+        linuxbsd)
+            @just setup-emscripten
+            source "$EMSDK_ROOT/emsdk_env.sh"
+            ;;
+        linux)
+            @just setup-emscripten
+            source "$EMSDK_ROOT/emsdk_env.sh"
+            ;;
+        android)
+            @just fetch-openjdk setup-android-sdk
+            ;;
+        macos) 
+            export PATH=$OSXCROSS_ROOT/target/bin/:$PATH
+            just build-osxcross fetch-vulkan-sdk
+            EXTRA_FLAGS="vulkan=no arch=arm64 werror=no vulkan_sdk_path=$VULKAN_SDK_ROOT/MoltenVK/MoltenVK/static/MoltenVK.xcframework osxcross_sdk=darwin24 generate_bundle=yes"
             if [ "$(uname)" = "Darwin" ]; then
                 unset OSXCROSS_ROOT
             fi
@@ -154,9 +166,11 @@ build-platform-target platform target precision="double":
             EXTRA_FLAGS="dlink_enabled=yes"
             ;;
         *)
-            EXTRA_FLAGS="use_llvm=yes use_mingw=yes"
+            echo "Invalid option"
+            exit 1
             ;;
     esac
+    cd $WORLD_PWD/godot
     scons platform={{platform}} \
           werror=no \
           compiledb=yes \
@@ -166,13 +180,17 @@ build-platform-target platform target precision="double":
           debug_symbol=yes \
           $EXTRA_FLAGS
     just handle-special-cases {{platform}} {{target}}
-    if [[ "{{target}}" == "editor" ]]; then
-        mkdir -p $WORLD_PWD/editors
-        cp -rf $WORLD_PWD/godot/bin/* $WORLD_PWD/editors
-    elif [[ "{{target}}" =~ template_* ]]; then
-        mkdir -p $WORLD_PWD/tpz
-        cp -rf $WORLD_PWD/godot/bin/* $WORLD_PWD/tpz
-    fi
+
+    case "{{target}}" in
+        editor)
+            mkdir -p $WORLD_PWD/editors
+            cp -rf $WORLD_PWD/godot/bin/* $WORLD_PWD/editors
+            ;;
+        template_*)
+            mkdir -p $WORLD_PWD/tpz
+            cp -rf $WORLD_PWD/godot/bin/* $WORLD_PWD/tpz
+            ;;
+    esac
 
 all-build-platform-target:
     #!/usr/bin/env bash
