@@ -22,7 +22,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        precision: [single, double]
+        precision: [double]
         platform: [macos]
         target: [editor, template_release, template_debug]
 
@@ -117,7 +117,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        precision: [single, double]
+        precision: [double]
         platform: [linux, windows, android, web]
         target: [editor, template_release, template_debug]
 
