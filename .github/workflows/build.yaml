@@ -34,6 +34,11 @@ jobs:
       - name: Set up dependencies
         run: brew install just hyperfine scons
 
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: "1.22.3"
+
       - name: Set up placeholders
         run: |
           mkdir -p godot/bin/
@@ -111,6 +116,11 @@ jobs:
       - name: Set up dependencies
         run: dnf install -y just git
 
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: "1.22.3"
+          
       - name: Set up placeholders
         run: |
           mkdir -p godot/bin/
