@@ -22,7 +22,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        precision: [single, double]
+        precision: [double]
         platform: [macos]
         target: [editor, template_release, template_debug]
 
@@ -32,7 +32,7 @@ jobs:
 
     steps:
       - name: Set up dependencies
-        run: brew install just hyperfine scons
+        run: brew install just hyperfine scons go
 
       - name: Set up placeholders
         run: |
@@ -117,7 +117,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        precision: [single, double]
+        precision: [double]
         platform: [linux, windows, android, web]
         target: [editor, template_release, template_debug]
 
@@ -127,7 +127,7 @@ jobs:
 
     steps:
       - name: Set up dependencies
-        run: dnf install -y just git
+        run: dnf install -y just git golang
 
       - name: Set up placeholders
         run: |
