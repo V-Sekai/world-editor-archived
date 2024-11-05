@@ -143,18 +143,28 @@ build-platform-target platform target precision="double":
     source "$EMSDK_ROOT/emsdk_env.sh"
     cd godot
     export EXTRA_FLAGS=""
-    case "{{platform}}" in \
-        macos) \
-            EXTRA_FLAGS="vulkan=yes arch=arm64 werror=no vulkan_sdk_path=$VULKAN_SDK_ROOT/MoltenVK/MoltenVK/static/MoltenVK.xcframework osxcross_sdk=darwin24 generate_bundle=yes"
+    case "{{platform}}" in
+        macos)
+            EXTRA_FLAGS=("vulkan=yes" "arch=arm64" "werror=no" "vulkan_sdk_path=$VULKAN_SDK_ROOT/MoltenVK/MoltenVK/static/MoltenVK.xcframework" "osxcross_sdk=darwin24" "generate_bundle=yes" "debug_symbol=yes")
             if [ "$(uname)" = "Darwin" ]; then
                 unset OSXCROSS_ROOT
             fi
             ;;
+        windows)
+            EXTRA_FLAGS=("use_llvm=yes" "use_mingw=yes" "linkflags=-Wl,-pdb=" "ccflags=-g -gcodeview" "debug_symbols=no")
+            ;;
+        android)
+            EXTRA_FLAGS=("debug_symbol=yes")
+            ;;
+        linuxbsd)
+            EXTRA_FLAGS=("debug_symbol=yes")
+            ;;
         web)
-            EXTRA_FLAGS="dlink_enabled=yes"
+            EXTRA_FLAGS=("dlink_enabled=yes" "debug_symbol=yes")
             ;;
         *)
-            EXTRA_FLAGS="use_llvm=yes use_mingw=yes"
+            echo "Unsupported platform: {{platform}}"
+            exit 1
             ;;
     esac
     scons platform={{platform}} \
@@ -163,8 +173,7 @@ build-platform-target platform target precision="double":
           precision={{precision}} \
           target={{target}} \
           test=yes \
-          debug_symbol=yes \
-          $EXTRA_FLAGS
+          "${EXTRA_FLAGS[@]}"
     just handle-special-cases {{platform}} {{target}}
     if [[ "{{target}}" == "editor" ]]; then
         mkdir -p $WORLD_PWD/editors
@@ -177,7 +186,7 @@ build-platform-target platform target precision="double":
 all-build-platform-target:
     #!/usr/bin/env bash
     parallel --ungroup --jobs 1 'just build-platform-target {1} {2}' \
-    ::: windows linux macos android web \
+    ::: windows linuxbsd macos android web \
     ::: editor template_debug template_release
 
 handle-special-cases platform target:
