@@ -61,8 +61,6 @@ jobs:
             ${{ env.CACHE_NAME }}-${{ env.GODOT_BASE_BRANCH }}-refs/heads/${{ env.GODOT_BASE_BRANCH }}  
             ${{ env.CACHE_NAME }}-${{ env.GODOT_BASE_BRANCH }} 
   
-      - uses: bencherdev/bencher@main 
-  
       - name: Fetch dependencies and Build Platform Target 
         run: | 
           export PLATFORM_ARGS="fetch-vulkan-sdk"
