@@ -795,7 +795,7 @@ Collection of single-file libraries used in Godot components.
   * Modifications: use `const char*` instead of `char*` for input string
 - `smolv.{cpp,h}`
   * Upstream: https://github.com/aras-p/smol-v
-  * Version: git (4b52c165c13763051a18e80ffbc2ee436314ceb2, 2020)
+  * Version: git (9dd54c379ac29fa148cb1b829bb939ba7381d8f4, 2024)
   * License: Public Domain or MIT
 - `stb_rect_pack.h`
   * Upstream: https://github.com/nothings/stb
@@ -991,7 +991,7 @@ instead of `miniz.h` as an external dependency.
 ## thorvg
 
 - Upstream: https://github.com/thorvg/thorvg
-- Version: 0.14.10 (366dcd72850c360b49e841e568fc5a154d7cce9e, 2024)
+- Version: 0.15.3 (2207c8ce5e28f566d90ad0ba74afa3fb0ff49f5d, 2024)
 - License: MIT
 
 Files extracted from upstream source:

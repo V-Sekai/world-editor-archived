@@ -5859,8 +5859,7 @@ void CanvasItemEditorViewport::_create_texture_node(Node *p_parent, Node *p_chil
 		undo_redo->add_do_property(p_child, "polygon", list);
 	} else if (Object::cast_to<AnimatedSprite2D>(p_child)) {
 		Dictionary meta = ResourceFormatImporter::get_singleton()->get_resource_metadata(p_path);
-		Ref<SpriteFrames> frames;
-		frames.instantiate();
+		Ref<SpriteFrames> frames = memnew(SpriteFrames);
 		frames->set_animation_speed(SceneStringName(default_), meta.get("fps", 5));
 		Size2i sprite_size = meta["sprite_size"];
 		for (int i = 0; i < (int)meta["frame_count"]; i++) {

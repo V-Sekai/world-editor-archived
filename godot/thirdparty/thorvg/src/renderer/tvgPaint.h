@@ -107,7 +107,7 @@ namespace tvg
 
         bool transform(const Matrix& m)
         {
-            tr.m = m;
+            if (&tr.m != &m) tr.m = m;
             tr.overriding = true;
             renderFlag |= RenderUpdateFlag::Transform;
 
@@ -133,7 +133,7 @@ namespace tvg
             this->clipper = clp;
             if (!clp) return;
 
-            P(clp)->ref();
+            P(clipper)->ref();
         }
 
         bool composite(Paint* source, Paint* target, CompositeMethod method)

@@ -45,8 +45,7 @@ Ref<JSON> read_lottie_json(String p_path) {
 		err = lottie_json->parse(lottie_str, true);
 	}
 	if (err != OK) {
-		Ref<ZIPReader> zip_reader;
-		zip_reader.instantiate();
+		Ref<ZIPReader> zip_reader = memnew(ZIPReader);
 		err = zip_reader->open(p_path);
 		ERR_FAIL_COND_V_MSG(err != OK, nullptr, vformat("Failed to open dotLottie: %s", error_names[err]));
 		String manifest_str;
