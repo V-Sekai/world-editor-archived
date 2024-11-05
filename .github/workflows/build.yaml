@@ -61,10 +61,28 @@ jobs:
             ${{ env.CACHE_NAME }}-${{ env.GODOT_BASE_BRANCH }}-refs/heads/${{ env.GODOT_BASE_BRANCH }}  
             ${{ env.CACHE_NAME }}-${{ env.GODOT_BASE_BRANCH }} 
   
+      - uses: bencherdev/bencher@main 
+  
       - name: Fetch dependencies and Build Platform Target 
         run: | 
           export PLATFORM_ARGS="fetch-vulkan-sdk"
-          hyperfine --show-output --runs 1 'just $PLATFORM_ARGS && just build-platform-target ${{ matrix.platform }} ${{ matrix.target }} ${{ matrix.precision }}'
+          bencher run \
+          --project 'v-sekai-world' \
+          --adapter shell_hyperfine \
+          --branch '${{ github.event_name == 'pull_request' && github.head_ref || github.ref }}' \
+          --testbed ubuntu-latest \
+          --threshold-measure latency \
+          --threshold-test t_test \
+          --threshold-max-sample-size 64 \
+          --threshold-upper-boundary 0.99 \
+          --thresholds-reset \
+          --ci-id ${{ runner.os }}-scons-${{ matrix.platform }}-${{ matrix.target }} \
+          --err \
+          --token '${{ secrets.BENCHER_API_TOKEN }}' \
+          --github-actions '${{ secrets.GITHUB_TOKEN }}' \
+          --ci-only-on-alert \
+          --file results.json \
+          "hyperfine --show-output --runs 1 --export-json results.json 'just $PLATFORM_ARGS && just build-platform-target ${{ matrix.platform }} ${{ matrix.target }} ${{ matrix.precision }}'" 
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
@@ -144,6 +162,8 @@ jobs:
             ${{ env.CACHE_NAME }}-${{ env.GODOT_BASE_BRANCH }}-refs/heads/${{ env.GODOT_BASE_BRANCH }}  
             ${{ env.CACHE_NAME }}-${{ env.GODOT_BASE_BRANCH }} 
   
+      - uses: bencherdev/bencher@main 
+  
       - name: Fetch dependencies and Build Platform Target 
         run: | 
           just install_packages 
@@ -165,7 +185,23 @@ jobs:
               PLATFORM_ARGS="nil"  
               ;;  
           esac  
-          hyperfine --show-output --runs 1 'just $PLATFORM_ARGS && just build-platform-target ${{ matrix.platform }} ${{ matrix.target }} ${{ matrix.precision }}'"
+          bencher run \
+          --project 'v-sekai-world' \
+          --adapter shell_hyperfine \
+          --branch '${{ github.event_name == 'pull_request' && github.head_ref || github.ref }}' \
+          --testbed ubuntu-latest \
+          --threshold-measure latency \
+          --threshold-test t_test \
+          --threshold-max-sample-size 64 \
+          --threshold-upper-boundary 0.99 \
+          --thresholds-reset \
+          --ci-id ${{ runner.os }}-scons-${{ matrix.platform }}-${{ matrix.target }} \
+          --err \
+          --token '${{ secrets.BENCHER_API_TOKEN }}' \
+          --github-actions '${{ secrets.GITHUB_TOKEN }}' \
+          --ci-only-on-alert \
+          --file results.json \
+          "hyperfine --show-output --runs 1 --export-json results.json 'just $PLATFORM_ARGS && just build-platform-target ${{ matrix.platform }} ${{ matrix.target }} ${{ matrix.precision }}'" 
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
