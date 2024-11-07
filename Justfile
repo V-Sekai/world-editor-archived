@@ -25,8 +25,12 @@ export EMSDK_ROOT := WORLD_PWD + "/emsdk"
 export OSXCROSS_ROOT := WORLD_PWD + "/osxcross"
 export MINGW_ROOT := WORLD_PWD + "/mingw"
 
-build-target-macos-editor-single:
+build-target-macos-editor-single: clean
     @just build-platform-target macos editor single
+    open ./godot/bin/godot_macos_editor.app
+
+clean: 
+    rm -rf android_sdk cmd-linetools jdk mingw
 
 run-all:
     just fetch-openjdk
