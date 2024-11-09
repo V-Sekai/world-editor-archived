@@ -69,13 +69,4 @@ struct CSGBrush {
 	void copy_from(const CSGBrush &p_brush, const Transform3D &p_xform);
 };
 
-struct CSGBrushOperation {
-	enum Operation {
-		OPERATION_UNION,
-		OPERATION_INTERSECTION,
-		OPERATION_SUBTRACTION,
-	};
-	void merge_brushes(Operation p_operation, const CSGBrush &p_brush_a, const CSGBrush &p_brush_b, CSGBrush &r_merged_brush, float p_vertex_snap, Ref<Material> p_default_material);
-};
-
 #endif // CSG_H
