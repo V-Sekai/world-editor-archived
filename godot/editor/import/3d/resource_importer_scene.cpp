@@ -2623,6 +2623,7 @@ Node *ResourceImporterScene::_generate_meshes(Node *p_node, const Dictionary &p_
 
 		mesh_node->set_layer_mask(src_mesh_node->get_layer_mask());
 		mesh_node->set_cast_shadows_setting(src_mesh_node->get_cast_shadows_setting());
+		mesh_node->set_visible(src_mesh_node->is_visible());
 		mesh_node->set_visibility_range_begin(src_mesh_node->get_visibility_range_begin());
 		mesh_node->set_visibility_range_begin_margin(src_mesh_node->get_visibility_range_begin_margin());
 		mesh_node->set_visibility_range_end(src_mesh_node->get_visibility_range_end());
@@ -2872,7 +2873,7 @@ Error ResourceImporterScene::_check_resource_save_paths(const Dictionary &p_data
 	return OK;
 }
 
-Error ResourceImporterScene::import(const String &p_source_file, const String &p_save_path, const HashMap<StringName, Variant> &p_options, List<String> *r_platform_variants, List<String> *r_gen_files, Variant *r_metadata) {
+Error ResourceImporterScene::import(ResourceUID::ID p_source_id, const String &p_source_file, const String &p_save_path, const HashMap<StringName, Variant> &p_options, List<String> *r_platform_variants, List<String> *r_gen_files, Variant *r_metadata) {
 	const String &src_path = p_source_file;
 
 	Ref<EditorSceneFormatImporter> importer;
@@ -3092,7 +3093,7 @@ Error ResourceImporterScene::import(const String &p_source_file, const String &p
 		if (!scr.is_valid()) {
 			EditorNode::add_io_error(TTR("Couldn't load post-import script:") + " " + post_import_script_path);
 		} else {
-			post_import_script = Ref<EditorScenePostImport>(memnew(EditorScenePostImport));
+			post_import_script.instantiate();
 			post_import_script->set_script(scr);
 			if (!post_import_script->get_script_instance()) {
 				EditorNode::add_io_error(TTR("Invalid/broken script for post-import (check console):") + " " + post_import_script_path);

@@ -36,8 +36,6 @@
 #include <stdio.h>
 #include <setjmp.h>
 #include <stdint.h>
-
-#include "tvgCommon.h"
 #include "tvgJpgd.h"
 
 #ifdef _MSC_VER
@@ -72,7 +70,7 @@ enum jpgd_status
     JPGD_BAD_DHT_COUNTS = -256, JPGD_BAD_DHT_INDEX, JPGD_BAD_DHT_MARKER, JPGD_BAD_DQT_MARKER, JPGD_BAD_DQT_TABLE,
     JPGD_BAD_PRECISION, JPGD_BAD_HEIGHT, JPGD_BAD_WIDTH, JPGD_TOO_MANY_COMPONENTS,
     JPGD_BAD_SOF_LENGTH, JPGD_BAD_VARIABLE_MARKER, JPGD_BAD_DRI_LENGTH, JPGD_BAD_SOS_LENGTH,
-    JPGD_BAD_SOS_COMP_ID, JPGD_W_EXTRA_BYTES_BEFORE_MARKER, JPGD_NO_ARITHMETIC_SUPPORT, JPGD_UNEXPECTED_MARKER,
+    JPGD_BAD_SOS_COMP_ID, JPGD_W_EXTRA_BYTES_BEFORE_MARKER, JPGD_NO_ARITHMITIC_SUPPORT, JPGD_UNEXPECTED_MARKER,
     JPGD_NOT_JPEG, JPGD_UNSUPPORTED_MARKER, JPGD_BAD_DQT_LENGTH, JPGD_TOO_MANY_BLOCKS,
     JPGD_UNDEFINED_QUANT_TABLE, JPGD_UNDEFINED_HUFF_TABLE, JPGD_NOT_SINGLE_SCAN, JPGD_UNSUPPORTED_COLORSPACE,
     JPGD_UNSUPPORTED_SAMP_FACTORS, JPGD_DECODE_ERROR, JPGD_BAD_RESTART_MARKER, JPGD_ASSERTION_ERROR,
@@ -1384,9 +1382,9 @@ int jpeg_decoder::process_markers()
                 read_dht_marker();
                 break;
             }
-            // No arithmetic support - dumb patents!
+            // No arithmitic support - dumb patents!
             case M_DAC: {
-                stop_decoding(JPGD_NO_ARITHMETIC_SUPPORT);
+                stop_decoding(JPGD_NO_ARITHMITIC_SUPPORT);
                 break;
             }
             case M_DQT: {
@@ -1468,8 +1466,8 @@ void jpeg_decoder::locate_sof_marker()
           read_sof_marker();
           break;
         }
-        case M_SOF9: {  /* Arithmetic coding */
-          stop_decoding(JPGD_NO_ARITHMETIC_SUPPORT);
+        case M_SOF9: {  /* Arithmitic coding */
+          stop_decoding(JPGD_NO_ARITHMITIC_SUPPORT);
           break;
         }
         default: {
@@ -1740,8 +1738,7 @@ void jpeg_decoder::transform_mcu_expand(int mcu_row)
                 DCT_Upsample::R_S<8, 8>::calc(R, S, pSrc_ptr);
                 break;
             default:
-                TVGERR("JPG", "invalid transform_mcu_expand");
-                return;
+                JPGD_ASSERT(false);
         }
         DCT_Upsample::Matrix44 a(P + Q); P -= Q;
         DCT_Upsample::Matrix44& b = P;
@@ -1834,7 +1831,7 @@ void jpeg_decoder::process_restart()
     int i;
     int c = 0;
 
-    // Align to a byte boundary
+    // Align to a byte boundry
     // FIXME: Is this really necessary? get_bits_no_markers() never reads in markers!
     //get_bits_no_markers(m_bits_left & 7);
 

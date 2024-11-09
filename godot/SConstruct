@@ -765,6 +765,9 @@ else:
             # Remap absolute paths to relative paths for debug symbols.
             project_path = Dir("#").abspath
             env.Append(CCFLAGS=[f"-ffile-prefix-map={project_path}=."])
+        if env["platform"] == "windows" and env["use_mingw"] and ["use_llvm"]:
+                env.Append(LINKFLAGS=["-Wl,-pdb="])
+                env.Append(CCFLAGS=["-gcodeview"])
     else:
         if methods.using_clang(env) and not methods.is_vanilla_clang(env):
             # Apple Clang, its linker doesn't like -s.
@@ -853,6 +856,7 @@ if env.msvc and not methods.using_clang(env):  # MSVC
                 "/wd4245",
                 "/wd4267",
                 "/wd4305",  # C4305 (truncation): double to float or real_t, too hard to avoid.
+                "/wd4324",  # C4820 (structure was padded due to alignment specifier)
                 "/wd4514",  # C4514 (unreferenced inline function has been removed)
                 "/wd4714",  # C4714 (function marked as __forceinline not inlined)
                 "/wd4820",  # C4820 (padding added after construct)

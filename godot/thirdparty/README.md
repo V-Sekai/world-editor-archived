@@ -642,8 +642,11 @@ File extracted from upstream release tarball:
 
 - All `.h` from `include/mbedtls/` to `thirdparty/mbedtls/include/mbedtls/`
   and all `.h` from `include/psa/` to `thirdparty/mbedtls/include/psa/`
-- All `.c` and `.h` from `library/` to `thirdparty/mbedtls/library/` except
-  for the `psa_*.c` source files
+- All `.c` and `.h` from `library/` to `thirdparty/mbedtls/library/`
+- From `library/` to `thirdparty/mbedtls/library/`:
+  - All `.c` and `.h` files
+  - Except `bignum_mod.c`, `block_cipher.c`, `ecp_curves_new.c`, `lmots.c`,
+  `lms.c`
 - The `LICENSE` file (edited to keep only the Apache 2.0 variant)
 - Applied the patch `msvc-redeclaration-bug.diff` to fix a compilation error
   with some MSVC versions
@@ -901,7 +904,7 @@ Files extracted from upstream source:
 - Version: master (1ffbc6f884ea1da89e104a5996cf8a726db673d5, 2023)
 - License: Public Domain
 
-Files extraced from upstream sources:
+Files extracted from upstream sources:
 
 - All `.cpp` and `.hpp` files
 
@@ -996,7 +999,7 @@ instead of `miniz.h` as an external dependency.
 ## thorvg
 
 - Upstream: https://github.com/thorvg/thorvg
-- Version: 0.15.3 (2207c8ce5e28f566d90ad0ba74afa3fb0ff49f5d, 2024)
+- Version: 0.14.10 (366dcd72850c360b49e841e568fc5a154d7cce9e, 2024)
 - License: MIT
 
 Files extracted from upstream source:
@@ -1164,7 +1167,7 @@ Files extracted from upstream source:
 
 Files extracted from upstream source:
 
-- All `.c` and `.h` files, minus `infback.c`
+- All `.c` and `.h` files, except `gz*.c` and `infback.c`
 - `LICENSE`
 
 
