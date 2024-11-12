@@ -169,7 +169,7 @@ void CSGShape3D::_make_dirty(bool p_parent_removing) {
 	dirty = true;
 }
 
-enum {
+enum ManifoldProperty {
 	MANIFOLD_PROPERTY_POSITION_X = 0,
 	MANIFOLD_PROPERTY_POSITION_Y,
 	MANIFOLD_PROPERTY_POSITION_Z,
@@ -911,6 +911,7 @@ void CSGShape3D::_bind_methods() {
 
 CSGShape3D::CSGShape3D() {
 	set_notify_local_transform(true);
+	default_material.instantiate();
 }
 
 CSGShape3D::~CSGShape3D() {

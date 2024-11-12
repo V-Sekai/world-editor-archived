@@ -23,10 +23,13 @@ export JAVA_HOME := WORLD_PWD + "/jdk"
 export VULKAN_SDK_ROOT := WORLD_PWD + "/vulkan_sdk/"
 export EMSDK_ROOT := WORLD_PWD + "/emsdk"
 export OSXCROSS_ROOT := WORLD_PWD + "/osxcross"
-export MINGW_ROOT := WORLD_PWD + "/mingw"
+export MINGW_PREFIX := WORLD_PWD + "/mingw"
 
 build-target-macos-editor-single:
     @just build-platform-target macos editor single
+
+build-target-windows-editor-single: fetch-llvm-mingw-macos
+    @just build-platform-target windows editor single
 
 run-all:
     just fetch-openjdk
@@ -38,13 +41,23 @@ run-all:
     just build-platform-target macos template_release
     echo "run-all: Success!"
 
+fetch-llvm-mingw-macos:
+    #!/usr/bin/env bash
+    if [ ! -d "${MINGW_PREFIX}" ]; then
+        cd $WORLD_PWD
+        mkdir -p ${MINGW_PREFIX}
+        curl -o llvm-mingw.tar.xz -L https://github.com/mstorsjo/llvm-mingw/releases/download/20241030/llvm-mingw-20241030-ucrt-macos-universal.tar.xz
+        tar -xf llvm-mingw.tar.xz -C ${MINGW_PREFIX} --strip 1
+        rm -rf llvm-mingw.tar.xz
+    fi
+
 fetch-llvm-mingw:
     #!/usr/bin/env bash
-    if [ ! -d "${MINGW_ROOT}" ]; then
+    if [ ! -d "${MINGW_PREFIX}" ]; then
         cd $WORLD_PWD
-        mkdir -p ${MINGW_ROOT}
+        mkdir -p ${MINGW_PREFIX}
         curl -o llvm-mingw.tar.xz -L https://github.com/mstorsjo/llvm-mingw/releases/download/20240917/llvm-mingw-20240917-ucrt-ubuntu-20.04-x86_64.tar.xz
-        tar -xf llvm-mingw.tar.xz -C ${MINGW_ROOT} --strip 1
+        tar -xf llvm-mingw.tar.xz -C ${MINGW_PREFIX} --strip 1
         rm -rf llvm-mingw.tar.xz
     fi
 
@@ -134,46 +147,76 @@ generate_build_constants:
     echo "const BUILD_DATE_STR = \"$(shell date --utc --iso=seconds)\"" >> v/addons/vsk_version/build_constants.gd
     echo "const BUILD_UNIX_TIME = $(shell date +%s)" >> v/addons/vsk_version/build_constants.gd
 
-
 build-platform-target platform target precision="double":
     #!/usr/bin/env bash
+    set -o xtrace
     cd $WORLD_PWD
-    export PATH=$MINGW_ROOT/bin:$PATH
-    export PATH=$OSXCROSS_ROOT/target/bin/:$PATH
     source "$EMSDK_ROOT/emsdk_env.sh"
     cd godot
-    export EXTRA_FLAGS=""
     case "{{platform}}" in
         macos)
-            EXTRA_FLAGS=("vulkan=yes" "arch=arm64" "werror=no" "vulkan_sdk_path=$VULKAN_SDK_ROOT/MoltenVK/MoltenVK/static/MoltenVK.xcframework" "osxcross_sdk=darwin24" "generate_bundle=yes" "debug_symbol=yes")
             if [ "$(uname)" = "Darwin" ]; then
                 unset OSXCROSS_ROOT
+            else
+                export PATH=${OSXCROSS_ROOT}/target/bin/:$PATH
             fi
+            scons platform=macos \
+                    werror=no \
+                    compiledb=yes \
+                    precision={{precision}} \
+                    target={{target}} \
+                    test=yes \
+                    vulkan=yes \
+                    arch=arm64 \
+                    vulkan_sdk_path=$VULKAN_SDK_ROOT/MoltenVK/MoltenVK/static/MoltenVK.xcframework \
+                    osxcross_sdk=darwin24 \
+                    generate_bundle=yes \
+                    debug_symbol=yes
             ;;
         windows)
-            EXTRA_FLAGS=("use_llvm=yes" "use_mingw=yes" "linkflags=-Wl,-pdb=" "ccflags=-g -gcodeview" "debug_symbols=no")
+            scons platform=windows \
+                werror=no \
+                compiledb=yes \
+                precision={{precision}} \
+                target={{target}} \
+                test=yes \
+                use_llvm=yes \
+                use_mingw=yes \
+                debug_symbols=yes
             ;;
         android)
-            EXTRA_FLAGS=("debug_symbol=yes")
+            scons platform=android \
+                    werror=no \
+                    compiledb=yes \
+                    precision={{precision}} \
+                    target={{target}} \
+                    test=yes \
+                    debug_symbol=yes
             ;;
         linuxbsd)
-            EXTRA_FLAGS=("debug_symbol=yes")
+            scons platform=linuxbsd \
+                    werror=no \
+                    compiledb=yes \
+                    precision={{precision}} \
+                    target={{target}} \
+                    test=yes \
+                    debug_symbol=yes
             ;;
         web)
-            EXTRA_FLAGS=("dlink_enabled=yes" "debug_symbol=yes")
+            scons platform=web \
+                    werror=no \
+                    compiledb=yes \
+                    precision={{precision}} \
+                    target={{target}} \
+                    test=yes \
+                    dlink_enabled=yes \
+                    debug_symbol=yes
             ;;
         *)
             echo "Unsupported platform: {{platform}}"
             exit 1
             ;;
     esac
-    scons platform={{platform}} \
-          werror=no \
-          compiledb=yes \
-          precision={{precision}} \
-          target={{target}} \
-          test=yes \
-          "${EXTRA_FLAGS[@]}"
     just handle-special-cases {{platform}} {{target}}
     if [[ "{{target}}" == "editor" ]]; then
         mkdir -p $WORLD_PWD/editors

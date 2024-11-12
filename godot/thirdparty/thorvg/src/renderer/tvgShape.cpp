@@ -34,6 +34,7 @@
 
 Shape :: Shape() : pImpl(new Impl(this))
 {
+    Paint::pImpl->id = TVG_CLASS_ID_SHAPE;
 }
 
 
@@ -51,13 +52,7 @@ unique_ptr<Shape> Shape::gen() noexcept
 
 uint32_t Shape::identifier() noexcept
 {
-    return (uint32_t) Type::Shape;
-}
-
-
-Type Shape::type() const noexcept
-{
-    return Type::Shape;
+    return TVG_CLASS_ID_SHAPE;
 }
 
 
@@ -156,14 +151,14 @@ Result Shape::appendCircle(float cx, float cy, float rx, float ry) noexcept
 }
 
 
-TVG_DEPRECATED Result Shape::appendArc(float cx, float cy, float radius, float startAngle, float sweep, bool pie) noexcept
+Result Shape::appendArc(float cx, float cy, float radius, float startAngle, float sweep, bool pie) noexcept
 {
     //just circle
     if (sweep >= 360.0f || sweep <= -360.0f) return appendCircle(cx, cy, radius, radius);
 
     const float arcPrecision = 1e-5f;
-    startAngle = deg2rad(startAngle);
-    sweep = deg2rad(sweep);
+    startAngle = mathDeg2Rad(startAngle);
+    sweep = mathDeg2Rad(sweep);
 
     auto nCurves = static_cast<int>(fabsf(sweep / MATH_PI2));
     if (fabsf(sweep / MATH_PI2) - nCurves > arcPrecision) ++nCurves;
@@ -411,6 +406,12 @@ Result Shape::strokeTrim(float begin, float end, bool simultaneous) noexcept
 {
     pImpl->strokeTrim(begin, end, simultaneous);
     return Result::Success;
+}
+
+
+bool Shape::strokeTrim(float* begin, float* end) const noexcept
+{
+    return pImpl->strokeTrim(begin, end);
 }
 
 

@@ -125,7 +125,7 @@ bool JpgLoader::close()
 }
 
 
-RenderSurface* JpgLoader::bitmap()
+Surface* JpgLoader::bitmap()
 {
     this->done();
     return ImageLoader::bitmap();

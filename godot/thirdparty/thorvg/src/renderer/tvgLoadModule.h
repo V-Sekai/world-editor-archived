@@ -80,14 +80,14 @@ struct ImageLoader : LoadModule
     static ColorSpace cs;                           //desired value
 
     float w = 0, h = 0;                             //default image size
-    RenderSurface surface;
+    Surface surface;
 
     ImageLoader(FileType type) : LoadModule(type) {}
 
     virtual bool animatable() { return false; }  //true if this loader supports animation.
     virtual Paint* paint() { return nullptr; }
 
-    virtual RenderSurface* bitmap()
+    virtual Surface* bitmap()
     {
         if (surface.data) return &surface;
         return nullptr;

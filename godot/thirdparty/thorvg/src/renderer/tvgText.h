@@ -90,7 +90,7 @@ struct Text::Impl
     bool render(RenderMethod* renderer)
     {
         if (!loader) return true;
-        renderer->blend(PP(paint)->blendMethod);
+        renderer->blend(paint->blend());
         return PP(shape)->render(renderer);
     }
 
@@ -115,7 +115,7 @@ struct Text::Impl
         auto fill = P(shape)->rs.fill;
         if (fill && P(shape)->flag & RenderUpdateFlag::Gradient) {
             auto scale = 1.0f / loader->scale;
-            if (fill->type() == Type::LinearGradient) {
+            if (fill->identifier() == TVG_CLASS_ID_LINEAR) {
                 P(static_cast<LinearGradient*>(fill))->x1 *= scale;
                 P(static_cast<LinearGradient*>(fill))->y1 *= scale;
                 P(static_cast<LinearGradient*>(fill))->x2 *= scale;
