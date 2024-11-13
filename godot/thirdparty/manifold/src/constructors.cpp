@@ -68,7 +68,7 @@ Manifold Manifold::Smooth(const MeshGL& meshGL,
  * No higher-order derivatives are considered, as the interpolation is
  * independent per triangle, only sharing constraints on their boundaries.
  *
- * @param meshGL input MeshGL.
+ * @param meshGL64 input MeshGL64.
  * @param sharpenedEdges If desired, you can supply a vector of sharpened
  * halfedges, which should in general be a small subset of all halfedges. Order
  * of entries doesn't matter, as each one specifies the desired smoothness
@@ -407,8 +407,7 @@ Manifold Manifold::Revolve(const Polygons& crossSection, int circularSegments,
 
   // Add front and back triangles if not a full revolution.
   if (!isFullRevolution) {
-    std::vector<ivec3> frontTriangles =
-        Triangulate(polygons, pImpl_->precision_);
+    std::vector<ivec3> frontTriangles = Triangulate(polygons, pImpl_->epsilon_);
     for (auto& t : frontTriangles) {
       triVerts.push_back({startPoses[t.x], startPoses[t.y], startPoses[t.z]});
     }
@@ -468,7 +467,8 @@ std::vector<Manifold> Manifold::Decompose() const {
   for (int i = 0; i < numComponents; ++i) {
     auto impl = std::make_shared<Impl>();
     // inherit original object's precision
-    impl->precision_ = pImpl_->precision_;
+    impl->epsilon_ = pImpl_->epsilon_;
+    impl->tolerance_ = pImpl_->tolerance_;
 
     Vec<int> vertNew2Old(numVert);
     const int nVert =

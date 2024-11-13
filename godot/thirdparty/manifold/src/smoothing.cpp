@@ -23,7 +23,7 @@ using namespace manifold;
 // ref and altIn.
 vec3 OrthogonalTo(vec3 in, vec3 altIn, vec3 ref) {
   vec3 out = in - la::dot(in, ref) * ref;
-  if (la::dot(out, out) < kTolerance * la::dot(in, in)) {
+  if (la::dot(out, out) < kPrecision * la::dot(in, in)) {
     out = altIn - la::dot(altIn, ref) * ref;
   }
   return SafeNormalize(out);
@@ -387,8 +387,14 @@ Vec<int> Manifold::Impl::VertFlatFace(const Vec<bool>& flatFaces) const {
 
 Vec<int> Manifold::Impl::VertHalfedge() const {
   Vec<int> vertHalfedge(NumVert());
+  Vec<uint8_t> counters(NumVert(), 0);
   for_each_n(autoPolicy(halfedge_.size(), 1e5), countAt(0), halfedge_.size(),
-             [&vertHalfedge, this](const int idx) {
+             [&vertHalfedge, &counters, this](const int idx) {
+               auto old = std::atomic_exchange(
+                   reinterpret_cast<std::atomic<uint8_t>*>(
+                       &counters[halfedge_[idx].startVert]),
+                   static_cast<uint8_t>(1));
+               if (old == 1) return;
                // arbitrary, last one wins.
                vertHalfedge[halfedge_[idx].startVert] = idx;
              });
@@ -785,7 +791,7 @@ void Manifold::Impl::CreateTangents(int normalIdx) {
               const vec3 normal = GetNormal(halfedge, normalIdx);
               const vec3 diff = faceNormal_[halfedge / 3] - normal;
               return FlatNormal(
-                  {la::dot(diff, diff) < kTolerance * kTolerance, normal});
+                  {la::dot(diff, diff) < kPrecision * kPrecision, normal});
             },
             [&faceEdges, &tangent, &fixedHalfedge, this](
                 int halfedge, const FlatNormal& here, const FlatNormal& next) {
@@ -796,7 +802,7 @@ void Manifold::Impl::CreateTangents(int normalIdx) {
               // mark special edges
               const vec3 diff = next.normal - here.normal;
               const bool differentNormals =
-                  la::dot(diff, diff) > kTolerance * kTolerance;
+                  la::dot(diff, diff) > kPrecision * kPrecision;
               if (differentNormals || here.isFlatFace != next.isFlatFace) {
                 fixedHalfedge[halfedge] = true;
                 if (faceEdges[0] == -1) {
@@ -986,13 +992,12 @@ void Manifold::Impl::Refine(std::function<int(vec3, vec4, vec4)> edgeDivisions,
   if (old.halfedgeTangent_.size() == old.halfedge_.size()) {
     for_each_n(autoPolicy(NumTri(), 1e4), countAt(0), NumVert(),
                InterpTri({vertPos_, vertBary, &old}));
-    // Make original since the subdivided faces have been warped into
-    // being non-coplanar, and hence not being related to the original faces.
-    InitializeOriginal();
   }
 
   halfedgeTangent_.resize(0);
   Finish();
+  CreateFaces();
+  meshRelation_.originalID = -1;
 }
 
 }  // namespace manifold

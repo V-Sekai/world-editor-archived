@@ -847,10 +847,11 @@ void Manifold::Impl::Hull(VecView<vec3> vertPos) {
   QuickHull qh(vertPos);
   std::tie(halfedge_, vertPos_) = qh.buildMesh();
   CalculateBBox();
-  SetPrecision(bBox_.Scale() * kTolerance);
+  SetEpsilon();
   CalculateNormals();
   InitializeOriginal();
   Finish();
+  CreateFaces();
 }
 
 }  // namespace manifold

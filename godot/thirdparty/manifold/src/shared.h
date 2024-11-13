@@ -21,17 +21,14 @@
 
 namespace manifold {
 
-/** @addtogroup Private
- *  @{
- */
 inline vec3 SafeNormalize(vec3 v) {
   v = la::normalize(v);
   return std::isfinite(v.x) ? v : vec3(0.0);
 }
 
-inline double MaxPrecision(double minPrecision, const Box& bBox) {
-  double precision = std::max(minPrecision, kTolerance * bBox.Scale());
-  return std::isfinite(precision) ? precision : -1;
+inline double MaxEpsilon(double minEpsilon, const Box& bBox) {
+  double epsilon = std::max(minEpsilon, kPrecision * bBox.Scale());
+  return std::isfinite(epsilon) ? epsilon : -1;
 }
 
 inline int NextHalfedge(int current) {
@@ -70,7 +67,7 @@ inline mat2x3 GetAxisAlignedProjection(vec3 normal) {
 }
 
 inline vec3 GetBarycentric(const vec3& v, const mat3& triPos,
-                           double precision) {
+                           double tolerance) {
   const mat3 edges(triPos[2] - triPos[1], triPos[0] - triPos[2],
                    triPos[1] - triPos[0]);
   const vec3 d2(la::dot(edges[0], edges[0]), la::dot(edges[1], edges[1]),
@@ -80,7 +77,7 @@ inline vec3 GetBarycentric(const vec3& v, const mat3& triPos,
                                                       : 2;
   const vec3 crossP = la::cross(edges[0], edges[1]);
   const double area2 = la::dot(crossP, crossP);
-  const double tol2 = precision * precision;
+  const double tol2 = tolerance * tolerance;
 
   vec3 uvw(0.0);
   for (const int i : {0, 1, 2}) {
@@ -143,12 +140,14 @@ struct TriRef {
   /// The OriginalID of the mesh this triangle came from. This ID is ideal for
   /// reapplying properties like UV coordinates to the output mesh.
   int originalID;
-  /// The triangle index of the original triangle this was part of:
-  /// Mesh.triVerts[tri].
+  /// Probably the triangle index of the original triangle this was part of:
+  /// Mesh.triVerts[tri], but it's an input, so just pass it along unchanged.
   int tri;
+  /// Triangles with the same face ID are coplanar.
+  int faceID;
 
   bool SameFace(const TriRef& other) const {
-    return meshID == other.meshID && tri == other.tri;
+    return meshID == other.meshID && faceID == other.faceID;
   }
 };
 
@@ -170,7 +169,6 @@ struct TmpEdge {
     return first == other.first ? second < other.second : first < other.first;
   }
 };
-/** @} */
 
 Vec<TmpEdge> inline CreateTmpEdges(const Vec<Halfedge>& halfedge) {
   Vec<TmpEdge> edges(halfedge.size());
@@ -214,7 +212,8 @@ inline std::ostream& operator<<(std::ostream& stream, const Barycentric& bary) {
 
 inline std::ostream& operator<<(std::ostream& stream, const TriRef& ref) {
   return stream << "meshID: " << ref.meshID
-                << ", originalID: " << ref.originalID << ", tri: " << ref.tri;
+                << ", originalID: " << ref.originalID << ", tri: " << ref.tri
+                << ", faceID: " << ref.faceID;
 }
 #endif
 }  // namespace manifold

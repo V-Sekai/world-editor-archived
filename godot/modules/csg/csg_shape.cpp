@@ -173,14 +173,11 @@ enum ManifoldProperty {
 	MANIFOLD_PROPERTY_POSITION_X = 0,
 	MANIFOLD_PROPERTY_POSITION_Y,
 	MANIFOLD_PROPERTY_POSITION_Z,
-	MANIFOLD_PROPERTY_NORMAL_X,
-	MANIFOLD_PROPERTY_NORMAL_Y,
-	MANIFOLD_PROPERTY_NORMAL_Z,
 	MANIFOLD_PROPERTY_INVERT,
 	MANIFOLD_PROPERTY_SMOOTH_GROUP,
 	MANIFOLD_PROPERTY_UV_X_0,
 	MANIFOLD_PROPERTY_UV_Y_0,
-	MANIFOLD_MAX
+	MANIFOLD_PROPERTY_MAX
 };
 
 static void _unpack_manifold(
@@ -256,11 +253,11 @@ static void _pack_manifold(
 	}
 
 	manifold::MeshGL64 mesh;
-	mesh.precision = p_snap;
-	mesh.numProp = MANIFOLD_MAX;
+	mesh.tolerance = p_snap;
+	mesh.numProp = MANIFOLD_PROPERTY_MAX;
 	mesh.runOriginalID.reserve(faces_by_material.size());
 	mesh.runIndex.reserve(faces_by_material.size() + 1);
-	mesh.vertProperties.reserve(p_mesh_merge->faces.size() * 3 * MANIFOLD_MAX);
+	mesh.vertProperties.reserve(p_mesh_merge->faces.size() * 3 * MANIFOLD_PROPERTY_MAX);
 
 	// Make a run of triangles for each material.
 	for (const KeyValue<uint32_t, Vector<CSGBrush::Face>> &E : faces_by_material) {
@@ -286,10 +283,10 @@ static void _pack_manifold(
 				constexpr int32_t order[3] = { 0, 2, 1 };
 				int i = order[tri_order_i];
 
-				mesh.triVerts.push_back(mesh.vertProperties.size() / MANIFOLD_MAX);
+				mesh.triVerts.push_back(mesh.vertProperties.size() / MANIFOLD_PROPERTY_MAX);
 
 				size_t begin = mesh.vertProperties.size();
-				mesh.vertProperties.resize(mesh.vertProperties.size() + MANIFOLD_MAX);
+				mesh.vertProperties.resize(mesh.vertProperties.size() + MANIFOLD_PROPERTY_MAX);
 				// Add the vertex properties.
 				// Use CSGBrush constants rather than push_back for clarity.
 				double *vert = &mesh.vertProperties[begin];
@@ -312,7 +309,7 @@ static void _pack_manifold(
 	 * the function will return false.
 	 */
 	if (mesh.Merge()) {
-		std::vector<int32_t> index_map(mesh.vertProperties.size() / MANIFOLD_MAX, -1);
+		std::vector<int32_t> index_map(mesh.vertProperties.size() / MANIFOLD_PROPERTY_MAX, -1);
 		const size_t vertices_count = mesh.mergeFromVert.size();
 		for (size_t i = 0; i < vertices_count; ++i) {
 			index_map[mesh.mergeFromVert[i]] = mesh.mergeToVert[i];
