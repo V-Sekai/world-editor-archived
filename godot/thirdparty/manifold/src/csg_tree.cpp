@@ -111,7 +111,7 @@ std::shared_ptr<CsgNode> CsgNode::Boolean(
 }
 
 std::shared_ptr<CsgNode> CsgNode::Translate(const vec3 &t) const {
-  mat3x4 transform = Identity3x4();
+  mat3x4 transform = la::identity;
   transform[3] += t;
   return Transform(transform);
 }
@@ -147,10 +147,10 @@ CsgLeafNode::CsgLeafNode(std::shared_ptr<const Manifold::Impl> pImpl_,
     : pImpl_(pImpl_), transform_(transform_) {}
 
 std::shared_ptr<const Manifold::Impl> CsgLeafNode::GetImpl() const {
-  if (transform_ == Identity3x4()) return pImpl_;
+  if (transform_ == mat3x4(la::identity)) return pImpl_;
   pImpl_ =
       std::make_shared<const Manifold::Impl>(pImpl_->Transform(transform_));
-  transform_ = Identity3x4();
+  transform_ = la::identity;
   return pImpl_;
 }
 
@@ -172,7 +172,8 @@ CsgNodeType CsgLeafNode::GetNodeType() const { return CsgNodeType::Leaf; }
 Manifold::Impl CsgLeafNode::Compose(
     const std::vector<std::shared_ptr<CsgLeafNode>> &nodes) {
   ZoneScoped;
-  double precision = -1;
+  double epsilon = -1;
+  double tolerance = -1;
   int numVert = 0;
   int numEdge = 0;
   int numTri = 0;
@@ -185,17 +186,18 @@ Manifold::Impl CsgLeafNode::Compose(
   for (auto &node : nodes) {
     if (node->pImpl_->status_ != Manifold::Error::NoError) {
       Manifold::Impl impl;
-      impl.status_ = Manifold::Error::InvalidConstruction;
+      impl.status_ = node->pImpl_->status_;
       return impl;
     }
     double nodeOldScale = node->pImpl_->bBox_.Scale();
     double nodeNewScale =
         node->pImpl_->bBox_.Transform(node->transform_).Scale();
-    double nodePrecision = node->pImpl_->precision_;
-    nodePrecision *= std::max(1.0, nodeNewScale / nodeOldScale);
-    nodePrecision = std::max(nodePrecision, kTolerance * nodeNewScale);
-    if (!std::isfinite(nodePrecision)) nodePrecision = -1;
-    precision = std::max(precision, nodePrecision);
+    double nodeEpsilon = node->pImpl_->epsilon_;
+    nodeEpsilon *= std::max(1.0, nodeNewScale / nodeOldScale);
+    nodeEpsilon = std::max(nodeEpsilon, kPrecision * nodeNewScale);
+    if (!std::isfinite(nodeEpsilon)) nodeEpsilon = -1;
+    epsilon = std::max(epsilon, nodeEpsilon);
+    tolerance = std::max(tolerance, node->pImpl_->tolerance_);
 
     vertIndices.push_back(numVert);
     edgeIndices.push_back(numEdge * 2);
@@ -212,7 +214,8 @@ Manifold::Impl CsgLeafNode::Compose(
   }
 
   Manifold::Impl combined;
-  combined.precision_ = precision;
+  combined.epsilon_ = epsilon;
+  combined.tolerance_ = tolerance;
   combined.vertPos_.resize(numVert);
   combined.halfedge_.resize(2 * numEdge);
   combined.faceNormal_.resize(numTri);
@@ -270,7 +273,7 @@ Manifold::Impl CsgLeafNode::Compose(
           }
         }
 
-        if (node->transform_ == Identity3x4()) {
+        if (node->transform_ == mat3x4(la::identity)) {
           copy(node->pImpl_->vertPos_.begin(), node->pImpl_->vertPos_.end(),
                combined.vertPos_.begin() + vertIndices[i]);
           copy(node->pImpl_->faceNormal_.begin(),
@@ -320,7 +323,7 @@ Manifold::Impl CsgLeafNode::Compose(
     }
   }
 
-  // required to remove parts that are smaller than the precision
+  // required to remove parts that are smaller than the tolerance
   combined.SimplifyTopology();
   combined.Finish();
   combined.IncrementMeshIDs();

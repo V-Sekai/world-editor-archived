@@ -55,11 +55,6 @@
 
 namespace manifold {
 
-/** @defgroup Private
- *  @brief Internal classes of the library; not currently part of the public API
- *  @{
- */
-
 /**
  * Stand-in for C++23's operator""uz (P0330R8)[https://wg21.link/P0330R8].
  */
@@ -68,7 +63,7 @@ namespace manifold {
   return n;
 }
 
-constexpr double kTolerance = 1e-12;
+constexpr double kPrecision = 1e-12;
 
 inline int Next3(int i) {
   constexpr ivec3 next3(1, 2, 0);
@@ -230,35 +225,11 @@ inline int CCW(vec2 p0, vec2 p1, vec2 p2, double tol) {
     return area > 0 ? 1 : -1;
 }
 
-/**
- * This 4x3 matrix can be used as an input to Manifold.Transform() to turn an
- * object. Turns along the shortest path from given up-vector to (0, 0, 1).
- *
- * @param up The vector to be turned to point upwards. Length does not matter.
- */
-inline mat3x4 RotateUp(vec3 up) {
-  up = la::normalize(up);
-  const vec3 axis = la::cross(up, {0, 0, 1});
-  double angle = la::asin(la::length(axis));
-  if (la::dot(up, {0, 0, 1}) < 0) angle = kPi - angle;
-  const quat q = la::rotation_quat(la::normalize(axis), angle);
-  return mat3x4(la::qmat(q), vec3());
-}
-
 inline mat4 Mat4(mat3x4 a) {
   return mat4({a[0], 0}, {a[1], 0}, {a[2], 0}, {a[3], 1});
 }
 inline mat3 Mat3(mat2x3 a) { return mat3({a[0], 0}, {a[1], 0}, {a[2], 1}); }
 
-/** @} */
-
-/** @defgroup Debug
- *  @brief Debugging features
- *
- * The features require compiler flags to be enabled. Assertions are enabled
- * with the MANIFOLD_DEBUG flag and then controlled with ExecutionParams.
- *  @{
- */
 #ifdef MANIFOLD_DEBUG
 
 template <class T>
@@ -350,5 +321,4 @@ struct Timer {
   }
 };
 #endif
-/** @} */
 }  // namespace manifold

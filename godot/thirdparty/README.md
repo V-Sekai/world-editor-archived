@@ -624,7 +624,7 @@ in the MSVC debugger.
 ## manifold
 
 - Upstream: https://github.com/elalish/manifold
-- Version: master (6ade357e4b308a77e3a7a0ee0486a2f3c3416ada, 2024)
+- Version: master (12b43f50c44988cf3bc650df9fda180c8cc06163, 2024)
 - License: Apache 2.0
 
 File extracted from upstream source:
@@ -897,16 +897,6 @@ Files extracted from upstream source:
 - `src/sljit/`
 - `AUTHORS` and `LICENCE`
 
-
-## quickhull
-
-- Upstream: https://github.com/akuukka/quickhull.git
-- Version: master (1ffbc6f884ea1da89e104a5996cf8a726db673d5, 2023)
-- License: Public Domain
-
-Files extracted from upstream sources:
-
-- All `.cpp` and `.hpp` files
 
 ## recastnavigation
 

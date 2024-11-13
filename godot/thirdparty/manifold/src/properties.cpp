@@ -21,29 +21,6 @@
 namespace {
 using namespace manifold;
 
-struct FaceAreaVolume {
-  VecView<const Halfedge> halfedges;
-  VecView<const vec3> vertPos;
-  const double precision;
-
-  std::pair<double, double> operator()(int face) {
-    double perimeter = 0;
-    vec3 edge[3];
-    for (int i : {0, 1, 2}) {
-      const int j = (i + 1) % 3;
-      edge[i] = vertPos[halfedges[3 * face + j].startVert] -
-                vertPos[halfedges[3 * face + i].startVert];
-      perimeter += la::length(edge[i]);
-    }
-    vec3 crossP = la::cross(edge[0], edge[1]);
-
-    double area = la::length(crossP);
-    double volume = la::dot(crossP, vertPos[halfedges[3 * face].startVert]);
-
-    return std::make_pair(area / 2.0, volume / 6.0);
-  }
-};
-
 struct CurvatureAngles {
   VecView<double> meanCurvature;
   VecView<double> gaussianCurvature;
@@ -90,6 +67,7 @@ struct CurvatureAngles {
 struct UpdateProperties {
   VecView<ivec3> triProp;
   VecView<double> properties;
+  VecView<uint8_t> counters;
 
   VecView<const double> oldProperties;
   VecView<const Halfedge> halfedge;
@@ -100,7 +78,6 @@ struct UpdateProperties {
   const int gaussianIdx;
   const int meanIdx;
 
-  // FIXME: race condition
   void operator()(const size_t tri) {
     for (const int i : {0, 1, 2}) {
       const int vert = halfedge[3 * tri + i].startVert;
@@ -108,6 +85,11 @@ struct UpdateProperties {
         triProp[tri][i] = vert;
       }
       const int propVert = triProp[tri][i];
+
+      auto old = std::atomic_exchange(
+          reinterpret_cast<std::atomic<uint8_t>*>(&counters[propVert]),
+          static_cast<uint8_t>(1));
+      if (old == 1) return;
 
       for (int p = 0; p < oldNumProp; ++p) {
         properties[numProp * propVert + p] =
@@ -126,15 +108,11 @@ struct UpdateProperties {
 
 struct CheckHalfedges {
   VecView<const Halfedge> halfedges;
-  VecView<const vec3> vertPos;
 
   bool operator()(size_t edge) const {
     const Halfedge halfedge = halfedges[edge];
     if (halfedge.startVert == -1 || halfedge.endVert == -1) return true;
     if (halfedge.pairedHalfedge == -1) return false;
-
-    if (!std::isfinite(vertPos[halfedge.startVert][0])) return false;
-    if (!std::isfinite(vertPos[halfedge.endVert][0])) return false;
 
     const Halfedge paired = halfedges[halfedge.pairedHalfedge];
     bool good = true;
@@ -199,7 +177,7 @@ namespace manifold {
 bool Manifold::Impl::IsManifold() const {
   if (halfedge_.size() == 0) return true;
   return all_of(countAt(0_uz), countAt(halfedge_.size()),
-                CheckHalfedges({halfedge_, vertPos_}));
+                CheckHalfedges({halfedge_}));
 }
 
 /**
@@ -229,41 +207,49 @@ bool Manifold::Impl::Is2Manifold() const {
 bool Manifold::Impl::MatchesTriNormals() const {
   if (halfedge_.size() == 0 || faceNormal_.size() != NumTri()) return true;
   return all_of(countAt(0_uz), countAt(NumTri()),
-                CheckCCW({halfedge_, vertPos_, faceNormal_, 2 * precision_}));
+                CheckCCW({halfedge_, vertPos_, faceNormal_, 2 * epsilon_}));
 }
 
 /**
- * Returns the number of triangles that are colinear within precision_.
+ * Returns the number of triangles that are colinear within epsilon_.
  */
 int Manifold::Impl::NumDegenerateTris() const {
   if (halfedge_.size() == 0 || faceNormal_.size() != NumTri()) return true;
   return count_if(
       countAt(0_uz), countAt(NumTri()),
-      CheckCCW({halfedge_, vertPos_, faceNormal_, -1 * precision_ / 2}));
+      CheckCCW({halfedge_, vertPos_, faceNormal_, -1 * epsilon_ / 2}));
 }
 
-Properties Manifold::Impl::GetProperties() const {
+double Manifold::Impl::GetProperty(Property prop) const {
   ZoneScoped;
-  if (IsEmpty()) return {0, 0};
-  // Kahan summation
-  double area = 0;
-  double volume = 0;
-  double areaCompensation = 0;
-  double volumeCompensation = 0;
-  for (size_t i = 0; i < NumTri(); ++i) {
-    auto [area1, volume1] =
-        FaceAreaVolume({halfedge_, vertPos_, precision_})(i);
-    const double t1 = area + area1;
-    const double t2 = volume + volume1;
-    areaCompensation += (area - t1) + area1;
-    volumeCompensation += (volume - t2) + volume1;
-    area = t1;
-    volume = t2;
-  }
-  area += areaCompensation;
-  volume += volumeCompensation;
+  if (IsEmpty()) return 0;
 
-  return {area, volume};
+  auto Volume = [this](size_t tri) {
+    const vec3 v = vertPos_[halfedge_[3 * tri].startVert];
+    vec3 crossP = la::cross(vertPos_[halfedge_[3 * tri + 1].startVert] - v,
+                            vertPos_[halfedge_[3 * tri + 2].startVert] - v);
+    return la::dot(crossP, v) / 6.0;
+  };
+
+  auto Area = [this](size_t tri) {
+    const vec3 v = vertPos_[halfedge_[3 * tri].startVert];
+    return la::length(
+               la::cross(vertPos_[halfedge_[3 * tri + 1].startVert] - v,
+                         vertPos_[halfedge_[3 * tri + 2].startVert] - v)) /
+           2.0;
+  };
+
+  // Kahan summation
+  double value = 0;
+  double valueCompensation = 0;
+  for (size_t i = 0; i < NumTri(); ++i) {
+    const double value1 = prop == Property::SurfaceArea ? Area(i) : Volume(i);
+    const double t = value + value1;
+    valueCompensation += (value - t) + value1;
+    value = t;
+  }
+  value += valueCompensation;
+  return value;
 }
 
 void Manifold::Impl::CalculateCurvature(int gaussianIdx, int meanIdx) {
@@ -295,18 +281,18 @@ void Manifold::Impl::CalculateCurvature(int gaussianIdx, int meanIdx) {
     meshRelation_.triProperties.resize(NumTri());
   }
 
+  const Vec<uint8_t> counters(NumPropVert(), 0);
   for_each_n(
       policy, countAt(0_uz), NumTri(),
       UpdateProperties({meshRelation_.triProperties, meshRelation_.properties,
-                        oldProperties, halfedge_, vertMeanCurvature,
+                        counters, oldProperties, halfedge_, vertMeanCurvature,
                         vertGaussianCurvature, oldNumProp, numProp, gaussianIdx,
                         meanIdx}));
 }
 
 /**
  * Calculates the bounding box of the entire manifold, which is stored
- * internally to short-cut Boolean operations and to serve as the precision
- * range for Morton code calculation. Ignores NaNs.
+ * internally to short-cut Boolean operations. Ignores NaNs.
  */
 void Manifold::Impl::CalculateBBox() {
   bBox_.min =

@@ -34,14 +34,12 @@ thirdparty_sources = [
 thirdparty_sources = [thirdparty_dir + file for file in thirdparty_sources]
 env_csg.Prepend(
     CPPPATH=[
-        "#thirdparty/quickhull",
         thirdparty_dir + "include",
     ]
 )
 env_thirdparty = env_csg.Clone()
 env_thirdparty.disable_warnings()
 env_thirdparty.add_source_files(thirdparty_obj, thirdparty_sources)
-env_thirdparty.add_source_files(thirdparty_obj, "#thirdparty/quickhull/QuickHull.cpp")
 env.modules_sources += thirdparty_obj
 
 # Godot's own source files
