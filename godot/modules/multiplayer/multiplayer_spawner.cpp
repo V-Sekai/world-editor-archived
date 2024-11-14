@@ -99,9 +99,9 @@ void MultiplayerSpawner::add_spawnable_scene(const String &p_path) {
 	SpawnableScene sc;
 	if (p_path.begins_with("uid://")) {
 		sc.uid = p_path;
-		sc.path = ResourceUID::get_singleton()->get_id_path(ResourceUID::get_singleton()->text_to_id(p_path));
+		sc.path = ResourceUID::uid_to_path(p_path);
 	} else {
-		sc.uid = ResourceUID::get_singleton()->id_to_text(ResourceLoader::get_resource_uid(p_path));
+		sc.uid = ResourceUID::path_to_uid(p_path);
 		sc.path = p_path;
 	}
 	if (Engine::get_singleton()->is_editor_hint()) {
